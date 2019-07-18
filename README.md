@@ -1,6 +1,6 @@
 # Rings for CosmoScout VR
 
-A CosmoScout VR plugin which can draw simple rings around celestial bodies. This plugin is built as part of CosmoScout's build process. See the [main repository](https://github.com/cosmoscout/cosmoscout-vr) for instructions.
+A CosmoScout VR plugin which can draw simple rings around celestial bodies. The rings can be configured with a inner and a outer radius and a texture. This plugin is built as part of CosmoScout's build process. See the [main repository](https://github.com/cosmoscout/cosmoscout-vr) for instructions.
 
 ## Configuration
 
