@@ -15,8 +15,6 @@ add_library(csp-rings SHARED
 target_link_libraries(csp-rings
   PUBLIC
     cs-core
-    cs-graphics
-    cs-scene
 )
 
 # install plugin -----------------------------------------------------------------------------------
