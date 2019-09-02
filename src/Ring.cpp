@@ -24,7 +24,7 @@ const unsigned GRID_RESOLUTION = 200;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string Ring::SPHERE_VERT = R"(
-#version 440 compatibility
+#version 330
 
 uniform vec3 uSunDirection;
 uniform vec2 uRadii;
@@ -55,7 +55,7 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const std::string Ring::SPHERE_FRAG = R"(
-#version 440 compatibility
+#version 330
 
 uniform sampler2D uSurfaceTexture;
 uniform float uAmbientBrightness;
