@@ -34,15 +34,17 @@ namespace csp::rings {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings::Ring& o) {
-  o.mTexture     = j.at("texture").get<std::string>();
-  o.mInnerRadius = j.at("innerRadius").get<double>();
-  o.mOuterRadius = j.at("outerRadius").get<double>();
+  o.mTexture     = cs::core::parseProperty<std::string>("texture", j);
+  o.mInnerRadius = cs::core::parseProperty<double>("innerRadius", j);
+  o.mOuterRadius = cs::core::parseProperty<double>("outerRadius", j);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  o.mRings = j.at("rings").get<std::map<std::string, Plugin::Settings::Ring>>();
+  cs::core::parseSettingsSection("csp-rings.rings", [&] {
+    o.mRings = j.at("rings").get<std::map<std::string, Plugin::Settings::Ring>>();
+  });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
