@@ -42,9 +42,8 @@ void from_json(const nlohmann::json& j, Plugin::Settings::Ring& o) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSettingsSection("csp-rings.rings", [&] {
-    o.mRings = j.at("rings").get<std::map<std::string, Plugin::Settings::Ring>>();
-  });
+  cs::core::parseSection("csp-rings",
+      [&] { o.mRings = cs::core::parseMap<std::string, Plugin::Settings::Ring>("rings", j); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
