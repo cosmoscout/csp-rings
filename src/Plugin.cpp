@@ -8,7 +8,6 @@
 
 #include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
-#include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
@@ -61,7 +60,7 @@ void Plugin::init() {
           "There is no Anchor \"" + settings.first + "\" defined in the settings.");
     }
 
-    auto   existence       = cs::utils::convert::getExistenceFromSettings(*anchor);
+    auto   existence       = cs::core::getExistenceFromSettings(*anchor);
     double tStartExistence = existence.first;
     double tEndExistence   = existence.second;
 
