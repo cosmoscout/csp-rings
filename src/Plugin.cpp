@@ -8,7 +8,6 @@
 
 #include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
-#include "../../../src/cs-utils/convert.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
@@ -34,15 +33,16 @@ namespace csp::rings {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings::Ring& o) {
-  o.mTexture     = j.at("texture").get<std::string>();
-  o.mInnerRadius = j.at("innerRadius").get<double>();
-  o.mOuterRadius = j.at("outerRadius").get<double>();
+  o.mTexture     = cs::core::parseProperty<std::string>("texture", j);
+  o.mInnerRadius = cs::core::parseProperty<double>("innerRadius", j);
+  o.mOuterRadius = cs::core::parseProperty<double>("outerRadius", j);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  o.mRings = j.at("rings").get<std::map<std::string, Plugin::Settings::Ring>>();
+  cs::core::parseSection("csp-rings",
+      [&] { o.mRings = cs::core::parseMap<std::string, Plugin::Settings::Ring>("rings", j); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,8 +60,9 @@ void Plugin::init() {
           "There is no Anchor \"" + settings.first + "\" defined in the settings.");
     }
 
-    double tStartExistence = cs::utils::convert::toSpiceTime(anchor->second.mStartExistence);
-    double tEndExistence   = cs::utils::convert::toSpiceTime(anchor->second.mEndExistence);
+    auto   existence       = cs::core::getExistenceFromSettings(*anchor);
+    double tStartExistence = existence.first;
+    double tEndExistence   = existence.second;
 
     auto ring = std::make_shared<Ring>(settings.second.mTexture, anchor->second.mCenter,
         anchor->second.mFrame, settings.second.mInnerRadius, settings.second.mOuterRadius,
