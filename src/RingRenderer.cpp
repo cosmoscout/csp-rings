@@ -36,16 +36,17 @@ RingRenderer::RingRenderer() {
     vertices[i * 2 + 1] = glm::vec2(x, 1.f);
   }
 
-  mSphereVAO.Bind();
+  mRingVAO.Bind();
 
-  mSphereVBO.Bind(GL_ARRAY_BUFFER);
-  mSphereVBO.BufferData(vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
-  mSphereVBO.Release();
+  mRingVBO.Bind(GL_ARRAY_BUFFER);
+  mRingVBO.BufferData(vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
 
-  mSphereVAO.EnableAttributeArray(0);
-  mSphereVAO.SpecifyAttributeArrayFloat(
-      0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, &mSphereVBO);
-  mSphereVAO.Release();
+  mRingVAO.EnableAttributeArray(0);
+  mRingVAO.SpecifyAttributeArrayFloat(
+      0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, &mRingVBO);
+
+  mRingVAO.Release();
+  mRingVBO.Release();
 
   // create sphere shader
   mShader.InitVertexShaderFromString(
@@ -74,7 +75,7 @@ bool RingRenderer::Do() {
 
   // set uniforms
   mShader.Bind();
-  mSphereVAO.Bind();
+  mRingVAO.Bind();
 
   // get modelview and projection matrices
   GLfloat glMatP[16];
@@ -88,6 +89,7 @@ bool RingRenderer::Do() {
   mShader.SetUniform(mUniforms.farClip, cs::utils::getCurrentFarClipDistance());
 
   glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   for (const auto& ring : mRings) {
     if (!ring->getIsInExistence()) {
@@ -100,7 +102,7 @@ bool RingRenderer::Do() {
     double factor = size / dist;
 
     if (factor < 0.002) {
-      return true;
+      continue;
     }
 
     auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(ring->getWorldTransform());
@@ -109,8 +111,6 @@ bool RingRenderer::Do() {
     mShader.SetUniform(mUniforms.radii, (float)ring->mInnerRadius, (float)ring->mOuterRadius);
 
     ring->mTexture->Bind(GL_TEXTURE0);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // draw
     glDrawArrays(GL_TRIANGLE_STRIP, 0, GRID_RESOLUTION * 2);
@@ -121,7 +121,7 @@ bool RingRenderer::Do() {
 
   glDisable(GL_BLEND);
 
-  mSphereVAO.Release();
+  mRingVAO.Release();
   mShader.Release();
 
   return true;

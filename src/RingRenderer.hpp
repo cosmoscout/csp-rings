@@ -35,8 +35,8 @@ class RingRenderer : public IVistaOpenGLDraw {
 
  private:
   VistaGLSLShader        mShader;
-  VistaVertexArrayObject mSphereVAO;
-  VistaBufferObject      mSphereVBO;
+  VistaVertexArrayObject mRingVAO;
+  VistaBufferObject      mRingVBO;
 
   struct {
     uint32_t matProjection;
