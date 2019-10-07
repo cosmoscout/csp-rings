@@ -9,6 +9,7 @@
 #include "Ring.hpp"
 
 #include "../../../src/cs-utils/FrameTimings.hpp"
+#include "../../../src/cs-utils/filesystem.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
 #include <VistaOGLExt/VistaTexture.h>
@@ -42,17 +43,16 @@ RingRenderer::RingRenderer() {
   mRingVBO.BufferData(vertices.size() * sizeof(glm::vec2), vertices.data(), GL_STATIC_DRAW);
 
   mRingVAO.EnableAttributeArray(0);
-  mRingVAO.SpecifyAttributeArrayFloat(
-      0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, &mRingVBO);
+  mRingVAO.SpecifyAttributeArrayFloat(0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, &mRingVBO);
 
   mRingVAO.Release();
   mRingVBO.Release();
 
   // create sphere shader
   mShader.InitVertexShaderFromString(
-      cs::utils::loadFileContentsToString("../share/resources/shaders/Ring.vert.glsl"));
+      cs::utils::filesystem::loadToString("../share/resources/shaders/Ring.vert.glsl"));
   mShader.InitFragmentShaderFromString(
-      cs::utils::loadFileContentsToString("../share/resources/shaders/Ring.frag.glsl"));
+      cs::utils::filesystem::loadToString("../share/resources/shaders/Ring.frag.glsl"));
   mShader.Link();
 
   mUniforms.matModelView   = mShader.GetUniformLocation("uMatModelView");
