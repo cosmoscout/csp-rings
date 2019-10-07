@@ -6,6 +6,8 @@
 
 #include "Plugin.hpp"
 
+#include "RingRenderer.hpp"
+
 #include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-utils/convert.hpp"
@@ -68,15 +70,16 @@ void Plugin::init() {
         tStartExistence, tEndExistence);
     mSolarSystem->registerAnchor(ring);
 
-    ring->setSun(mSolarSystem->getSun());
-
-    VistaOpenGLNode* ringNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), ring.get());
-    VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        ringNode, static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
-
-    mRingNodes.push_back(ringNode);
     mRings.push_back(ring);
   }
+
+  mRingRenderer = std::make_unique<RingRenderer>();
+  mRingRenderer->setSun(mSolarSystem->getSun());
+  mRingRenderer->setRings(mRings);
+
+  mRenderNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), mRingRenderer.get());
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      mRenderNode, static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,9 +89,7 @@ void Plugin::deInit() {
     mSolarSystem->unregisterAnchor(ring);
   }
 
-  for (auto const& ringNode : mRingNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(ringNode);
-  }
+  mSceneGraph->GetRoot()->DisconnectChild(mRenderNode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -21,3 +21,4 @@ target_link_libraries(csp-rings
 
 install(TARGETS csp-rings    DESTINATION "share/plugins")
 install(DIRECTORY "textures" DESTINATION "share/resources")
+install(DIRECTORY "shaders" DESTINATION "share/resources")

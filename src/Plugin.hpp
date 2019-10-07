@@ -14,6 +14,8 @@
 
 namespace csp::rings {
 
+class RingRenderer;
+
 /// This plugin introduces planetary rings. They can be rendered around any object that is
 /// located at the center of a spice frame.
 /// The configuration of this plugin is done via the provided json config. See README.md for
@@ -40,7 +42,8 @@ class Plugin : public cs::core::PluginBase {
  private:
   Settings                           mPluginSettings;
   std::vector<std::shared_ptr<Ring>> mRings;
-  std::vector<VistaOpenGLNode*>      mRingNodes;
+  VistaOpenGLNode*                   mRenderNode;
+  std::unique_ptr<RingRenderer>      mRingRenderer;
 };
 
 } // namespace csp::rings

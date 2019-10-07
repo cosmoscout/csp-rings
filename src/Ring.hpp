@@ -18,32 +18,22 @@ class VistaTexture;
 
 namespace csp::rings {
 
+class RingRenderer;
+
 /// A single planetary ring. It renders around the frames center.
-class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
+class Ring : public cs::scene::CelestialObject {
+  friend RingRenderer;
+
  public:
   Ring(std::string const& sTexture, std::string const& sCenterName, std::string const& sFrameName,
       double dInnerRadius, double dOuterRadius, double tStartExistence, double tEndExistence);
-  ~Ring() override = default;
-
-  void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
-
-  bool Do() override;
-  bool GetBoundingBox(VistaBoundingBox& bb) override;
-
+  ~Ring() = default;
  private:
   std::shared_ptr<VistaTexture> mTexture;
-
-  VistaGLSLShader        mShader;
-  VistaVertexArrayObject mSphereVAO;
-  VistaBufferObject      mSphereVBO;
-
   std::shared_ptr<const cs::scene::CelestialObject> mSun;
 
   double mInnerRadius;
   double mOuterRadius;
-
-  static const std::string SPHERE_VERT;
-  static const std::string SPHERE_FRAG;
 };
 } // namespace csp::rings
 
