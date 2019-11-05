@@ -16,13 +16,20 @@
 
 class VistaTexture;
 
+namespace cs::core {
+class GraphicsEngine;
+class SolarSystem;
+} // namespace cs::core
+
 namespace csp::rings {
 
 /// A single planetary ring. It renders around the frames center.
 class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
  public:
-  Ring(std::string const& sTexture, std::string const& sCenterName, std::string const& sFrameName,
-      double dInnerRadius, double dOuterRadius, double tStartExistence, double tEndExistence);
+  Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
+      std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+      std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
+      double dOuterRadius, double tStartExistence, double tEndExistence);
   ~Ring() override = default;
 
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
@@ -31,7 +38,9 @@ class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   bool GetBoundingBox(VistaBoundingBox& bb) override;
 
  private:
-  std::shared_ptr<VistaTexture> mTexture;
+  std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
+  std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
+  std::shared_ptr<VistaTexture>             mTexture;
 
   VistaGLSLShader        mShader;
   VistaVertexArrayObject mSphereVAO;

@@ -6,6 +6,8 @@
 
 #include "Ring.hpp"
 
+#include "../../../src/cs-core/GraphicsEngine.hpp"
+#include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
 #include "../../../src/cs-utils/FrameTimings.hpp"
 #include "../../../src/cs-utils/utils.hpp"
@@ -58,7 +60,7 @@ const std::string Ring::SPHERE_FRAG = R"(
 #version 330
 
 uniform sampler2D uSurfaceTexture;
-uniform float uAmbientBrightness;
+uniform float uSunIlluminance;
 uniform float uFarClip;
 
 // inputs
@@ -72,16 +74,20 @@ layout(location = 0) out vec4 oColor;
 void main()
 {
     oColor = texture(uSurfaceTexture, vTexCoords);
+    oColor.rgb *= uSunIlluminance;
     gl_FragDepth = length(vPosition) / uFarClip;
 }
 )";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Ring::Ring(std::string const& sTexture, std::string const& sCenterName,
-    std::string const& sFrameName, double dInnerRadius, double dOuterRadius, double tStartExistence,
-    double tEndExistence)
+Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
+    std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+    std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
+    double dOuterRadius, double tStartExistence, double tEndExistence)
     : cs::scene::CelestialObject(sCenterName, sFrameName, tStartExistence, tEndExistence)
+    , mGraphicsEngine(graphicsEngine)
+    , mSolarSystem(solarSystem)
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
     , mInnerRadius(dInnerRadius)
     , mOuterRadius(dOuterRadius) {
@@ -151,6 +157,14 @@ bool Ring::Do() {
       mShader.GetUniformLocation("uRadii"), (float)mInnerRadius, (float)mOuterRadius);
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
+
+  float sunIlluminance(1.f);
+
+  if (mGraphicsEngine->pEnableHDR.get()) {
+   sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
+  }
+
+  mShader.SetUniform(mShader.GetUniformLocation("uSunIlluminance"), sunIlluminance);
 
   mTexture->Bind(GL_TEXTURE0);
 
