@@ -161,7 +161,7 @@ bool Ring::Do() {
   float sunIlluminance(1.f);
 
   if (mGraphicsEngine->pEnableHDR.get()) {
-   sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
+    sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
   }
 
   mShader.SetUniform(mShader.GetUniformLocation("uSunIlluminance"), sunIlluminance);
