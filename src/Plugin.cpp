@@ -8,6 +8,7 @@
 
 #include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
+#include "../../../src/cs-utils/logger.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
 #include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
@@ -47,8 +48,16 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Plugin::Plugin() {
+  // Create default logger for this plugin.
+  cs::utils::logger::init("csp-rings");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Plugin::init() {
-  std::cout << "Loading: CosmoScout VR Plugin Rings" << std::endl;
+
+  spdlog::info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-rings");
 
@@ -78,11 +87,15 @@ void Plugin::init() {
     mRingNodes.push_back(ringNode);
     mRings.push_back(ring);
   }
+
+  spdlog::info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
+  spdlog::info("Unloading plugin...");
+
   for (auto const& ring : mRings) {
     mSolarSystem->unregisterAnchor(ring);
   }
@@ -90,6 +103,8 @@ void Plugin::deInit() {
   for (auto const& ringNode : mRingNodes) {
     mSceneGraph->GetRoot()->DisconnectChild(ringNode);
   }
+
+  spdlog::info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -34,6 +34,8 @@ class Plugin : public cs::core::PluginBase {
     std::map<std::string, Ring> mRings;
   };
 
+  Plugin();
+
   void init() override;
   void deInit() override;
 
