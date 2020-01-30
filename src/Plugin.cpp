@@ -50,7 +50,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 Plugin::Plugin() {
   // Create default logger for this plugin.
-  cs::utils::logger::init("csp-rings");
+  spdlog::set_default_logger(cs::utils::logger::createLogger("csp-rings"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
