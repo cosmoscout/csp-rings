@@ -6,6 +6,8 @@
 
 #include "Ring.hpp"
 
+#include "../../../src/cs-core/GraphicsEngine.hpp"
+#include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
 #include "../../../src/cs-utils/FrameTimings.hpp"
 #include "../../../src/cs-utils/utils.hpp"
@@ -58,7 +60,7 @@ const std::string Ring::SPHERE_FRAG = R"(
 #version 330
 
 uniform sampler2D uSurfaceTexture;
-uniform float uAmbientBrightness;
+uniform float uSunIlluminance;
 uniform float uFarClip;
 
 // inputs
@@ -72,21 +74,25 @@ layout(location = 0) out vec4 oColor;
 void main()
 {
     oColor = texture(uSurfaceTexture, vTexCoords);
+    oColor.rgb *= uSunIlluminance;
     gl_FragDepth = length(vPosition) / uFarClip;
 }
 )";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Ring::Ring(std::string const& sTexture, std::string const& sCenterName,
-    std::string const& sFrameName, double dInnerRadius, double dOuterRadius, double tStartExistence,
-    double tEndExistence)
+Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
+    std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+    std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
+    double dOuterRadius, double tStartExistence, double tEndExistence)
     : cs::scene::CelestialObject(sCenterName, sFrameName, tStartExistence, tEndExistence)
+    , mGraphicsEngine(graphicsEngine)
+    , mSolarSystem(solarSystem)
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
     , mInnerRadius(dInnerRadius)
     , mOuterRadius(dOuterRadius) {
 
-  // create sphere grid geometry
+  // The geometry is a grid strip around the center of the SPICE frame.
   std::vector<glm::vec2> vertices(GRID_RESOLUTION * 2);
 
   for (int i = 0; i < GRID_RESOLUTION; ++i) {
@@ -104,7 +110,7 @@ Ring::Ring(std::string const& sTexture, std::string const& sCenterName,
   mSphereVAO.SpecifyAttributeArrayFloat(
       0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, &mSphereVBO);
 
-  // create sphere shader
+  // Create sphere shader.
   mShader.InitVertexShaderFromString(SPHERE_VERT);
   mShader.InitFragmentShaderFromString(SPHERE_FRAG);
   mShader.Link();
@@ -125,7 +131,7 @@ bool Ring::Do() {
 
   cs::utils::FrameTimings::ScopedTimer timer("Rings");
 
-  // cull invisible rings
+  // Cull invisible rings.
   double size   = mOuterRadius * glm::length(matWorldTransform[0]);
   double dist   = glm::length(matWorldTransform[3].xyz());
   double factor = size / dist;
@@ -134,14 +140,15 @@ bool Ring::Do() {
     return true;
   }
 
-  // set uniforms
   mShader.Bind();
 
-  // get modelview and projection matrices
+  // Get modelview and projection matrices.
   GLfloat glMatMV[16], glMatP[16];
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
   glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
   auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(getWorldTransform());
+
+  // Set uniforms.
   glUniformMatrix4fv(
       mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
   glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
@@ -152,17 +159,27 @@ bool Ring::Do() {
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
+  float sunIlluminance(1.f);
+
+  // If HDR is enabled, the illuminance has to be calculated based on the scene's scale and the
+  // distance to the Sun.
+  if (mGraphicsEngine->pEnableHDR.get()) {
+    sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
+  }
+
+  mShader.SetUniform(mShader.GetUniformLocation("uSunIlluminance"), sunIlluminance);
+
   mTexture->Bind(GL_TEXTURE0);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  // draw
+  // Draw.
   mSphereVAO.Bind();
   glDrawArrays(GL_TRIANGLE_STRIP, 0, GRID_RESOLUTION * 2);
   mSphereVAO.Release();
 
-  // clean up
+  // Clean up.
   mTexture->Unbind(GL_TEXTURE0);
 
   glDisable(GL_BLEND);

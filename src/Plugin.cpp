@@ -73,9 +73,9 @@ void Plugin::init() {
     double tStartExistence = existence.first;
     double tEndExistence   = existence.second;
 
-    auto ring = std::make_shared<Ring>(settings.second.mTexture, anchor->second.mCenter,
-        anchor->second.mFrame, settings.second.mInnerRadius, settings.second.mOuterRadius,
-        tStartExistence, tEndExistence);
+    auto ring = std::make_shared<Ring>(mGraphicsEngine, mSolarSystem, settings.second.mTexture,
+        anchor->second.mCenter, anchor->second.mFrame, settings.second.mInnerRadius,
+        settings.second.mOuterRadius, tStartExistence, tEndExistence);
     mSolarSystem->registerAnchor(ring);
 
     ring->setSun(mSolarSystem->getSun());
