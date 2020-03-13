@@ -23,12 +23,14 @@ class Plugin : public cs::core::PluginBase {
   struct Settings {
     /// Settings for a ring around a planet.
     struct Ring {
-      std::string mTexture; ///< The path to the texture. The texture should represent a
-                            ///< cross section of the ring.
-      double mInnerRadius;  ///< The distance from the planets center to where the rings start in
-                            ///< meter.
-      double mOuterRadius;  ///< The distance from the planets center to where the rings end in
-                            ///< meter.
+      /// The path to the texture. The texture should represent a cross section of the ring.
+      std::string mTexture;
+
+      /// The distance from the planets center to where the rings start in meter.
+      double mInnerRadius;
+
+      /// The distance from the planets center to where the rings end in meter.
+      double mOuterRadius;
     };
 
     std::map<std::string, Ring> mRings;

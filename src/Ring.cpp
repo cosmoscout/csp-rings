@@ -92,7 +92,7 @@ Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
     , mInnerRadius(dInnerRadius)
     , mOuterRadius(dOuterRadius) {
 
-  // create sphere grid geometry
+  // The geometry is a grid strip around the center of the SPICE frame.
   std::vector<glm::vec2> vertices(GRID_RESOLUTION * 2);
 
   for (int i = 0; i < GRID_RESOLUTION; ++i) {
@@ -110,7 +110,7 @@ Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
   mSphereVAO.SpecifyAttributeArrayFloat(
       0, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), 0, &mSphereVBO);
 
-  // create sphere shader
+  // Create sphere shader.
   mShader.InitVertexShaderFromString(SPHERE_VERT);
   mShader.InitFragmentShaderFromString(SPHERE_FRAG);
   mShader.Link();
@@ -131,7 +131,7 @@ bool Ring::Do() {
 
   cs::utils::FrameTimings::ScopedTimer timer("Rings");
 
-  // cull invisible rings
+  // Cull invisible rings.
   double size   = mOuterRadius * glm::length(matWorldTransform[0]);
   double dist   = glm::length(matWorldTransform[3].xyz());
   double factor = size / dist;
@@ -140,14 +140,15 @@ bool Ring::Do() {
     return true;
   }
 
-  // set uniforms
   mShader.Bind();
 
-  // get modelview and projection matrices
+  // Get modelview and projection matrices.
   GLfloat glMatMV[16], glMatP[16];
   glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
   glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
   auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(getWorldTransform());
+
+  // Set uniforms.
   glUniformMatrix4fv(
       mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
   glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
@@ -160,6 +161,8 @@ bool Ring::Do() {
 
   float sunIlluminance(1.f);
 
+  // If HDR is enabled, the illuminance has to be calculated based on the scene's scale and the
+  // distance to the Sun.
   if (mGraphicsEngine->pEnableHDR.get()) {
     sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
   }
@@ -171,12 +174,12 @@ bool Ring::Do() {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  // draw
+  // Draw.
   mSphereVAO.Bind();
   glDrawArrays(GL_TRIANGLE_STRIP, 0, GRID_RESOLUTION * 2);
   mSphereVAO.Release();
 
-  // clean up
+  // Clean up.
   mTexture->Unbind(GL_TEXTURE0);
 
   glDisable(GL_BLEND);
