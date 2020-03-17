@@ -42,9 +42,9 @@ class Plugin : public cs::core::PluginBase {
   void deInit() override;
 
  private:
-  Settings                           mPluginSettings;
-  std::vector<std::shared_ptr<Ring>> mRings;
-  std::vector<VistaOpenGLNode*>      mRingNodes;
+  Settings                                      mPluginSettings;
+  std::vector<std::shared_ptr<Ring>>            mRings;
+  std::vector<std::unique_ptr<VistaOpenGLNode>> mRingNodes;
 };
 
 } // namespace csp::rings
