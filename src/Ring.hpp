@@ -10,11 +10,10 @@
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
 #include <VistaOGLExt/VistaBufferObject.h>
 #include <VistaOGLExt/VistaGLSLShader.h>
+#include <VistaOGLExt/VistaTexture.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
 
 #include "../../../src/cs-scene/CelestialObject.hpp"
-
-class VistaTexture;
 
 namespace cs::core {
 class GraphicsEngine;
@@ -43,7 +42,7 @@ class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
  private:
   std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
   std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
-  std::shared_ptr<VistaTexture>             mTexture;
+  std::unique_ptr<VistaTexture>             mTexture;
 
   VistaGLSLShader        mShader;
   VistaVertexArrayObject mSphereVAO;
