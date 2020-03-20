@@ -89,11 +89,10 @@ void Plugin::init() {
 
     ring->setSun(mSolarSystem->getSun());
 
-    VistaOpenGLNode* ringNode = mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), ring.get());
+    mRingNodes.emplace_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), ring.get()));
     VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        ringNode, static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
+        mRingNodes.back().get(), static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
 
-    mRingNodes.push_back(ringNode);
     mRings.push_back(ring);
   }
 
@@ -110,7 +109,7 @@ void Plugin::deInit() {
   }
 
   for (auto const& ringNode : mRingNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(ringNode);
+    mSceneGraph->GetRoot()->DisconnectChild(ringNode.get());
   }
 
   spdlog::info("Unloading done.");
