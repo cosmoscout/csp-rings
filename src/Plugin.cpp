@@ -78,9 +78,7 @@ void Plugin::init() {
           "There is no Anchor \"" + settings.first + "\" defined in the settings.");
     }
 
-    auto   existence       = cs::core::getExistenceFromSettings(*anchor);
-    double tStartExistence = existence.first;
-    double tEndExistence   = existence.second;
+    auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
 
     auto ring = std::make_shared<Ring>(mGraphicsEngine, mSolarSystem, settings.second.mTexture,
         anchor->second.mCenter, anchor->second.mFrame, settings.second.mInnerRadius,
