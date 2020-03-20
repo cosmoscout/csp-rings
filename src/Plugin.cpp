@@ -33,17 +33,26 @@ namespace csp::rings {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings::Ring& o) {
-  o.mTexture     = cs::core::parseProperty<std::string>("texture", j);
-  o.mInnerRadius = cs::core::parseProperty<double>("innerRadius", j);
-  o.mOuterRadius = cs::core::parseProperty<double>("outerRadius", j);
+void from_json(nlohmann::json const& j, Plugin::Settings::Ring& o) {
+  cs::core::Settings::deserialize(j, "texture", o.mTexture);
+  cs::core::Settings::deserialize(j, "innerRadius", o.mInnerRadius);
+  cs::core::Settings::deserialize(j, "outerRadius", o.mOuterRadius);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings::Ring const& o) {
+  cs::core::Settings::serialize(j, "texture", o.mTexture);
+  cs::core::Settings::serialize(j, "innerRadius", o.mInnerRadius);
+  cs::core::Settings::serialize(j, "outerRadius", o.mOuterRadius);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection("csp-rings",
-      [&] { o.mRings = cs::core::parseMap<std::string, Plugin::Settings::Ring>("rings", j); });
+void from_json(nlohmann::json const& j, Plugin::Settings& o) {
+  cs::core::Settings::deserialize(j, "rings", o.mRings);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings const& o) {
+  cs::core::Settings::serialize(j, "rings", o.mRings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
