@@ -16,7 +16,7 @@
 #include "../../../src/cs-scene/CelestialObject.hpp"
 
 namespace cs::core {
-class GraphicsEngine;
+class Settings;
 class SolarSystem;
 } // namespace cs::core
 
@@ -27,7 +27,7 @@ namespace csp::rings {
 /// planet's center respectively.
 class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
  public:
-  Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
+  Ring(std::shared_ptr<cs::core::Settings> const&   settings,
       std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
       double dOuterRadius, double tStartExistence, double tEndExistence);
@@ -40,9 +40,9 @@ class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   bool GetBoundingBox(VistaBoundingBox& bb) override;
 
  private:
-  std::shared_ptr<cs::core::GraphicsEngine> mGraphicsEngine;
-  std::shared_ptr<cs::core::SolarSystem>    mSolarSystem;
-  std::unique_ptr<VistaTexture>             mTexture;
+  std::shared_ptr<cs::core::Settings>    mSettings;
+  std::shared_ptr<cs::core::SolarSystem> mSolarSystem;
+  std::unique_ptr<VistaTexture>          mTexture;
 
   VistaGLSLShader        mShader;
   VistaVertexArrayObject mSphereVAO;

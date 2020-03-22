@@ -6,7 +6,7 @@
 
 #include "Ring.hpp"
 
-#include "../../../src/cs-core/GraphicsEngine.hpp"
+#include "../../../src/cs-core/Settings.hpp"
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-graphics/TextureLoader.hpp"
 #include "../../../src/cs-utils/FrameTimings.hpp"
@@ -81,12 +81,12 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
+Ring::Ring(std::shared_ptr<cs::core::Settings> const& settings,
     std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
     std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
     double dOuterRadius, double tStartExistence, double tEndExistence)
     : cs::scene::CelestialObject(sCenterName, sFrameName, tStartExistence, tEndExistence)
-    , mGraphicsEngine(graphicsEngine)
+    , mSettings(settings)
     , mSolarSystem(solarSystem)
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
     , mInnerRadius(dInnerRadius)
@@ -163,7 +163,7 @@ bool Ring::Do() {
 
   // If HDR is enabled, the illuminance has to be calculated based on the scene's scale and the
   // distance to the Sun.
-  if (mGraphicsEngine->pEnableHDR.get()) {
+  if (mSettings->mGraphics.pEnableHDR.get()) {
     sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
   }
 
