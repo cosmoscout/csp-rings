@@ -164,7 +164,7 @@ bool Ring::Do() {
   // If HDR is enabled, the illuminance has to be calculated based on the scene's scale and the
   // distance to the Sun.
   if (mGraphicsEngine->pEnableHDR.get()) {
-    sunIlluminance = mSolarSystem->getSunIlluminance(getWorldTransform()[3]);
+    sunIlluminance = static_cast<float>(mSolarSystem->getSunIlluminance(getWorldTransform()[3]));
   }
 
   mShader.SetUniform(mShader.GetUniformLocation("uSunIlluminance"), sunIlluminance);
