@@ -21,7 +21,7 @@ namespace csp::rings {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const unsigned GRID_RESOLUTION = 200;
+const size_t GRID_RESOLUTION = 200;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +95,7 @@ Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
   // The geometry is a grid strip around the center of the SPICE frame.
   std::vector<glm::vec2> vertices(GRID_RESOLUTION * 2);
 
-  for (int i = 0; i < GRID_RESOLUTION; ++i) {
+  for (size_t i = 0; i < GRID_RESOLUTION; ++i) {
     auto x = (1.f * i / (GRID_RESOLUTION - 1.f));
 
     vertices[i * 2 + 0] = glm::vec2(x, 0.f);
