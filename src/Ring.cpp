@@ -16,6 +16,7 @@
 #include <VistaOGLExt/VistaOGLUtils.h>
 
 #include <glm/gtc/type_ptr.hpp>
+#include <utility>
 
 namespace csp::rings {
 
@@ -81,13 +82,13 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
-    std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
+    std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
     std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
     double dOuterRadius, double tStartExistence, double tEndExistence)
     : cs::scene::CelestialObject(sCenterName, sFrameName, tStartExistence, tEndExistence)
-    , mGraphicsEngine(graphicsEngine)
-    , mSolarSystem(solarSystem)
+    , mGraphicsEngine(std::move(graphicsEngine))
+    , mSolarSystem(std::move(solarSystem))
     , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
     , mInnerRadius(dInnerRadius)
     , mOuterRadius(dOuterRadius) {

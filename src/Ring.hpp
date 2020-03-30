@@ -27,8 +27,8 @@ namespace csp::rings {
 /// planet's center respectively.
 class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
  public:
-  Ring(std::shared_ptr<cs::core::GraphicsEngine> const& graphicsEngine,
-      std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+  Ring(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
+      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
       double dOuterRadius, double tStartExistence, double tEndExistence);
   ~Ring() override = default;
