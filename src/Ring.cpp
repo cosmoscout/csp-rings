@@ -26,7 +26,7 @@ const size_t GRID_RESOLUTION = 200;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string Ring::SPHERE_VERT = R"(
+const char* Ring::SPHERE_VERT = R"(
 #version 330
 
 uniform vec3 uSunDirection;
@@ -57,7 +57,7 @@ void main()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const std::string Ring::SPHERE_FRAG = R"(
+const char* Ring::SPHERE_FRAG = R"(
 #version 330
 
 uniform sampler2D uSurfaceTexture;
@@ -97,10 +97,10 @@ Ring::Ring(std::shared_ptr<cs::core::GraphicsEngine> graphicsEngine,
   std::vector<glm::vec2> vertices(GRID_RESOLUTION * 2);
 
   for (size_t i = 0; i < GRID_RESOLUTION; ++i) {
-    auto x = (1.f * i / (GRID_RESOLUTION - 1.f));
+    auto x = (1.F * i / (GRID_RESOLUTION - 1.F));
 
-    vertices[i * 2 + 0] = glm::vec2(x, 0.f);
-    vertices[i * 2 + 1] = glm::vec2(x, 1.f);
+    vertices[i * 2 + 0] = glm::vec2(x, 0.F);
+    vertices[i * 2 + 1] = glm::vec2(x, 1.F);
   }
 
   mSphereVBO.Bind(GL_ARRAY_BUFFER);
@@ -144,23 +144,24 @@ bool Ring::Do() {
   mShader.Bind();
 
   // Get modelview and projection matrices.
-  GLfloat glMatMV[16], glMatP[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, &glMatMV[0]);
-  glGetFloatv(GL_PROJECTION_MATRIX, &glMatP[0]);
-  auto matMV = glm::make_mat4x4(glMatMV) * glm::mat4(getWorldTransform());
+  std::array<GLfloat, 16> glMatMV{};
+  std::array<GLfloat, 16> glMatP{};
+  glGetFloatv(GL_MODELVIEW_MATRIX, glMatMV.data());
+  glGetFloatv(GL_PROJECTION_MATRIX, glMatP.data());
+  auto matMV = glm::make_mat4x4(glMatMV.data()) * glm::mat4(getWorldTransform());
 
   // Set uniforms.
   glUniformMatrix4fv(
       mShader.GetUniformLocation("uMatModelView"), 1, GL_FALSE, glm::value_ptr(matMV));
-  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP);
+  glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
   mShader.SetUniform(mShader.GetUniformLocation("uSurfaceTexture"), 0);
-  mShader.SetUniform(
-      mShader.GetUniformLocation("uRadii"), (float)mInnerRadius, (float)mOuterRadius);
+  mShader.SetUniform(mShader.GetUniformLocation("uRadii"), static_cast<float>(mInnerRadius),
+      static_cast<float>(mOuterRadius));
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 
-  float sunIlluminance(1.f);
+  float sunIlluminance(1.F);
 
   // If HDR is enabled, the illuminance has to be calculated based on the scene's scale and the
   // distance to the Sun.
@@ -191,7 +192,7 @@ bool Ring::Do() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool Ring::GetBoundingBox(VistaBoundingBox& bb) {
+bool Ring::GetBoundingBox(VistaBoundingBox& /*bb*/) {
   return false;
 }
 

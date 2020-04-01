@@ -53,8 +53,8 @@ class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   double mInnerRadius;
   double mOuterRadius;
 
-  static const std::string SPHERE_VERT;
-  static const std::string SPHERE_FRAG;
+  static const char* SPHERE_VERT;
+  static const char* SPHERE_FRAG;
 };
 } // namespace csp::rings
 
