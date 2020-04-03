@@ -31,6 +31,13 @@ class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
       std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
       double dOuterRadius, double tStartExistence, double tEndExistence);
+
+  Ring(Ring const& other) = delete;
+  Ring(Ring&& other)      = delete;
+
+  Ring& operator=(Ring const& other) = delete;
+  Ring& operator=(Ring&& other) = delete;
+
   ~Ring() override = default;
 
   /// The sun object is used for lighting computation.
