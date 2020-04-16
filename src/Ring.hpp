@@ -27,10 +27,17 @@ namespace csp::rings {
 /// planet's center respectively.
 class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
  public:
-  Ring(std::shared_ptr<cs::core::Settings> const&   settings,
-      std::shared_ptr<cs::core::SolarSystem> const& solarSystem, std::string const& sTexture,
+  Ring(std::shared_ptr<cs::core::Settings>   settings,
+      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
       std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
       double dOuterRadius, double tStartExistence, double tEndExistence);
+
+  Ring(Ring const& other) = delete;
+  Ring(Ring&& other)      = delete;
+
+  Ring& operator=(Ring const& other) = delete;
+  Ring& operator=(Ring&& other) = delete;
+
   ~Ring() override = default;
 
   /// The sun object is used for lighting computation.
@@ -53,8 +60,8 @@ class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   double mInnerRadius;
   double mOuterRadius;
 
-  static const std::string SPHERE_VERT;
-  static const std::string SPHERE_FRAG;
+  static const char* SPHERE_VERT;
+  static const char* SPHERE_FRAG;
 };
 } // namespace csp::rings
 
