@@ -14,7 +14,7 @@ namespace csp::rings {
 
 spdlog::logger& logger() {
   static auto logger = cs::utils::createLogger("csp-rings");
-  return *logger.get();
+  return *logger;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
