@@ -51,7 +51,7 @@ void from_json(const nlohmann::json& j, Plugin::Settings& o) {
 
 void Plugin::init() {
 
-  logger()->info("Loading plugin...");
+  logger().info("Loading plugin...");
 
   mPluginSettings = mAllSettings->mPlugins.at("csp-rings");
 
@@ -81,13 +81,13 @@ void Plugin::init() {
     mRings.push_back(ring);
   }
 
-  logger()->info("Loading done.");
+  logger().info("Loading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void Plugin::deInit() {
-  logger()->info("Unloading plugin...");
+  logger().info("Unloading plugin...");
 
   for (auto const& ring : mRings) {
     mSolarSystem->unregisterAnchor(ring);
@@ -97,7 +97,7 @@ void Plugin::deInit() {
     mSceneGraph->GetRoot()->DisconnectChild(ringNode.get());
   }
 
-  logger()->info("Unloading done.");
+  logger().info("Unloading done.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
