@@ -56,7 +56,7 @@ class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   std::shared_ptr<cs::core::SolarSystem>            mSolarSystem;
   std::shared_ptr<const cs::scene::CelestialObject> mSun;
 
-  std::unique_ptr<VistaOpenGLNode> mRingNode;
+  std::unique_ptr<VistaOpenGLNode> mGLNode;
 
   Plugin::Settings::Ring        mRingSettings;
   std::unique_ptr<VistaTexture> mTexture;

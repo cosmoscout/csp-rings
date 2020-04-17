@@ -119,16 +119,16 @@ Ring::Ring(std::shared_ptr<cs::core::Settings> settings,
 
   // Add to scenegraph.
   VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
-  mRingNode.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
+  mGLNode.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
   VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-      mRingNode.get(), static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
+      mGLNode.get(), static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Ring::~Ring() {
   VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
-  pSG->GetRoot()->DisconnectChild(mRingNode.get());
+  pSG->GetRoot()->DisconnectChild(mGLNode.get());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
