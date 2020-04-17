@@ -12,6 +12,11 @@
 #include "../../../src/cs-utils/FrameTimings.hpp"
 #include "../../../src/cs-utils/utils.hpp"
 
+#include <VistaKernel/GraphicsManager/VistaGraphicsManager.h>
+#include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
+#include <VistaKernel/GraphicsManager/VistaTransformNode.h>
+#include <VistaKernel/VistaSystem.h>
+#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 #include <VistaMath/VistaBoundingBox.h>
 #include <VistaOGLExt/VistaOGLUtils.h>
 
@@ -83,15 +88,11 @@ void main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Ring::Ring(std::shared_ptr<cs::core::Settings> settings,
-    std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
-    std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
-    double dOuterRadius, double tStartExistence, double tEndExistence)
+    std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sCenterName,
+    std::string const& sFrameName, double tStartExistence, double tEndExistence)
     : cs::scene::CelestialObject(sCenterName, sFrameName, tStartExistence, tEndExistence)
     , mSettings(std::move(settings))
-    , mSolarSystem(std::move(solarSystem))
-    , mTexture(cs::graphics::TextureLoader::loadFromFile(sTexture))
-    , mInnerRadius(dInnerRadius)
-    , mOuterRadius(dOuterRadius) {
+    , mSolarSystem(std::move(solarSystem)) {
 
   // The geometry is a grid strip around the center of the SPICE frame.
   std::vector<glm::vec2> vertices(GRID_RESOLUTION * 2);
@@ -115,6 +116,28 @@ Ring::Ring(std::shared_ptr<cs::core::Settings> settings,
   mShader.InitVertexShaderFromString(SPHERE_VERT);
   mShader.InitFragmentShaderFromString(SPHERE_FRAG);
   mShader.Link();
+
+  // Add to scenegraph.
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  mRingNode.reset(pSG->NewOpenGLNode(pSG->GetRoot(), this));
+  VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
+      mRingNode.get(), static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Ring::~Ring() {
+  VistaSceneGraph* pSG = GetVistaSystem()->GetGraphicsManager()->GetSceneGraph();
+  pSG->GetRoot()->DisconnectChild(mRingNode.get());
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Ring::configure(Plugin::Settings::Ring const& settings) {
+  if (mRingSettings.mTexture != settings.mTexture) {
+    mTexture = cs::graphics::TextureLoader::loadFromFile(settings.mTexture);
+  }
+  mRingSettings = settings;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +156,7 @@ bool Ring::Do() {
   cs::utils::FrameTimings::ScopedTimer timer("Rings");
 
   // Cull invisible rings.
-  double size   = mOuterRadius * glm::length(matWorldTransform[0]);
+  double size   = mRingSettings.mOuterRadius * glm::length(matWorldTransform[0]);
   double dist   = glm::length(matWorldTransform[3].xyz());
   double factor = size / dist;
 
@@ -156,8 +179,8 @@ bool Ring::Do() {
   glUniformMatrix4fv(mShader.GetUniformLocation("uMatProjection"), 1, GL_FALSE, glMatP.data());
 
   mShader.SetUniform(mShader.GetUniformLocation("uSurfaceTexture"), 0);
-  mShader.SetUniform(mShader.GetUniformLocation("uRadii"), static_cast<float>(mInnerRadius),
-      static_cast<float>(mOuterRadius));
+  mShader.SetUniform(
+      mShader.GetUniformLocation("uRadii"), mRingSettings.mInnerRadius, mRingSettings.mOuterRadius);
   mShader.SetUniform(
       mShader.GetUniformLocation("uFarClip"), cs::utils::getCurrentFarClipDistance());
 

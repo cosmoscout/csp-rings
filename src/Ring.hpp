@@ -7,13 +7,16 @@
 #ifndef CSP_RINGS_RING_HPP
 #define CSP_RINGS_RING_HPP
 
+#include "Plugin.hpp"
+
+#include "../../../src/cs-scene/CelestialObject.hpp"
+
 #include <VistaKernel/GraphicsManager/VistaOpenGLDraw.h>
+#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
 #include <VistaOGLExt/VistaBufferObject.h>
 #include <VistaOGLExt/VistaGLSLShader.h>
 #include <VistaOGLExt/VistaTexture.h>
 #include <VistaOGLExt/VistaVertexArrayObject.h>
-
-#include "../../../src/cs-scene/CelestialObject.hpp"
 
 namespace cs::core {
 class Settings;
@@ -28,17 +31,19 @@ namespace csp::rings {
 class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
  public:
   Ring(std::shared_ptr<cs::core::Settings>   settings,
-      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sTexture,
-      std::string const& sCenterName, std::string const& sFrameName, double dInnerRadius,
-      double dOuterRadius, double tStartExistence, double tEndExistence);
+      std::shared_ptr<cs::core::SolarSystem> solarSystem, std::string const& sCenterName,
+      std::string const& sFrameName, double tStartExistence, double tEndExistence);
 
   Ring(Ring const& other) = delete;
-  Ring(Ring&& other)      = delete;
+  Ring(Ring&& other)      = default;
 
   Ring& operator=(Ring const& other) = delete;
   Ring& operator=(Ring&& other) = delete;
 
-  ~Ring() override = default;
+  ~Ring() override;
+
+  /// Configures the internal renderer according to the given values.
+  void configure(Plugin::Settings::Ring const& settings);
 
   /// The sun object is used for lighting computation.
   void setSun(std::shared_ptr<const cs::scene::CelestialObject> const& sun);
@@ -47,18 +52,17 @@ class Ring : public cs::scene::CelestialObject, public IVistaOpenGLDraw {
   bool GetBoundingBox(VistaBoundingBox& bb) override;
 
  private:
-  std::shared_ptr<cs::core::Settings>    mSettings;
-  std::shared_ptr<cs::core::SolarSystem> mSolarSystem;
-  std::unique_ptr<VistaTexture>          mTexture;
-
-  VistaGLSLShader        mShader;
-  VistaVertexArrayObject mSphereVAO;
-  VistaBufferObject      mSphereVBO;
-
+  std::shared_ptr<cs::core::Settings>               mSettings;
+  std::shared_ptr<cs::core::SolarSystem>            mSolarSystem;
   std::shared_ptr<const cs::scene::CelestialObject> mSun;
 
-  double mInnerRadius;
-  double mOuterRadius;
+  std::unique_ptr<VistaOpenGLNode> mRingNode;
+
+  Plugin::Settings::Ring        mRingSettings;
+  std::unique_ptr<VistaTexture> mTexture;
+  VistaGLSLShader               mShader;
+  VistaVertexArrayObject        mSphereVAO;
+  VistaBufferObject             mSphereVBO;
 
   static const char* SPHERE_VERT;
   static const char* SPHERE_FRAG;

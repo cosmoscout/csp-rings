@@ -10,11 +10,8 @@
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-utils/logger.hpp"
 #include "../../../src/cs-utils/utils.hpp"
+#include "Ring.hpp"
 #include "logger.hpp"
-
-#include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
-#include <VistaKernel/GraphicsManager/VistaTransformNode.h>
-#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,31 +59,12 @@ void Plugin::init() {
 
   logger().info("Loading plugin...");
 
-  mPluginSettings = mAllSettings->mPlugins.at("csp-rings");
+  mOnLoadConnection = mAllSettings->onLoad().connect([this]() { onLoad(); });
+  mOnSaveConnection = mAllSettings->onSave().connect(
+      [this]() { mAllSettings->mPlugins["csp-rings"] = mPluginSettings; });
 
-  for (auto const& settings : mPluginSettings.mRings) {
-    auto anchor = mAllSettings->mAnchors.find(settings.first);
-
-    if (anchor == mAllSettings->mAnchors.end()) {
-      throw std::runtime_error(
-          "There is no Anchor \"" + settings.first + "\" defined in the settings.");
-    }
-
-    auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
-
-    auto ring = std::make_shared<Ring>(mAllSettings, mSolarSystem, settings.second.mTexture,
-        anchor->second.mCenter, anchor->second.mFrame, settings.second.mInnerRadius,
-        settings.second.mOuterRadius, tStartExistence, tEndExistence);
-    mSolarSystem->registerAnchor(ring);
-
-    ring->setSun(mSolarSystem->getSun());
-
-    mRingNodes.emplace_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), ring.get()));
-    VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        mRingNodes.back().get(), static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
-
-    mRings.push_back(ring);
-  }
+  // Load settings.
+  onLoad();
 
   logger().info("Loading done.");
 }
@@ -100,11 +78,66 @@ void Plugin::deInit() {
     mSolarSystem->unregisterAnchor(ring);
   }
 
-  for (auto const& ringNode : mRingNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(ringNode.get());
-  }
+  mAllSettings->onLoad().disconnect(mOnLoadConnection);
+  mAllSettings->onSave().disconnect(mOnSaveConnection);
 
   logger().info("Unloading done.");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Plugin::onLoad() {
+  // Read settings from JSON.
+  from_json(mAllSettings->mPlugins.at("csp-rings"), mPluginSettings);
+
+  // First try to re-configure existing rings.
+  for (auto&& ring : mRings) {
+    auto settings = mPluginSettings.mRings.find(ring->getCenterName());
+    if (settings != mPluginSettings.mRings.end()) {
+      // If there are settings for this ring, reconfigure it.
+      auto anchor                           = mAllSettings->mAnchors.find(settings->first);
+      auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
+      ring->setStartExistence(tStartExistence);
+      ring->setEndExistence(tEndExistence);
+      ring->setFrameName(anchor->second.mFrame);
+      ring->configure(settings->second);
+    } else {
+      // Else delete it.
+      mSolarSystem->unregisterAnchor(ring);
+      ring.reset();
+    }
+  }
+
+  // Then remove all which have been set to null.
+  mRings.erase(
+      std::remove_if(mRings.begin(), mRings.end(), [](auto const& p) { return !p; }), mRings.end());
+
+  // Then add new rings.
+  for (auto const& ringSettings : mPluginSettings.mRings) {
+    auto existing = std::find_if(mRings.begin(), mRings.end(),
+        [&](auto val) { return val->getCenterName() == ringSettings.first; });
+    if (existing != mRings.end()) {
+      continue;
+    }
+
+    auto anchor = mAllSettings->mAnchors.find(ringSettings.first);
+
+    if (anchor == mAllSettings->mAnchors.end()) {
+      throw std::runtime_error(
+          "There is no Anchor \"" + ringSettings.first + "\" defined in the settings.");
+    }
+
+    auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
+
+    auto ring = std::make_shared<Ring>(mAllSettings, mSolarSystem, anchor->second.mCenter,
+        anchor->second.mFrame, tStartExistence, tEndExistence);
+
+    ring->configure(ringSettings.second);
+
+    mSolarSystem->registerAnchor(ring);
+
+    mRings.emplace_back(ring);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
