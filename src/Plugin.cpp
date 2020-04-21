@@ -75,7 +75,7 @@ void Plugin::deInit() {
   logger().info("Unloading plugin...");
 
   for (auto const& ring : mRings) {
-    mSolarSystem->unregisterAnchor(ring);
+    mSolarSystem->unregisterAnchor(ring.second);
   }
 
   mAllSettings->onLoad().disconnect(mOnLoadConnection);
@@ -90,41 +90,39 @@ void Plugin::onLoad() {
   // Read settings from JSON.
   from_json(mAllSettings->mPlugins.at("csp-rings"), mPluginSettings);
 
-  // First try to re-configure existing rings.
-  for (auto&& ring : mRings) {
-    auto settings = mPluginSettings.mRings.find(ring->getCenterName());
+  // First try to re-configure existing rings. We assume that they are similar if they have the same
+  // name in the settings (which means they are attached to an anchor with the same name).
+  auto ring = mRings.begin();
+  while (ring != mRings.end()) {
+    auto settings = mPluginSettings.mRings.find(ring->first);
     if (settings != mPluginSettings.mRings.end()) {
       // If there are settings for this ring, reconfigure it.
       auto anchor                           = mAllSettings->mAnchors.find(settings->first);
       auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
-      ring->setStartExistence(tStartExistence);
-      ring->setEndExistence(tEndExistence);
-      ring->setFrameName(anchor->second.mFrame);
-      ring->configure(settings->second);
+      ring->second->setStartExistence(tStartExistence);
+      ring->second->setEndExistence(tEndExistence);
+      ring->second->setFrameName(anchor->second.mFrame);
+      ring->second->configure(settings->second);
+
+      ++ring;
     } else {
       // Else delete it.
-      mSolarSystem->unregisterAnchor(ring);
-      ring.reset();
+      mSolarSystem->unregisterAnchor(ring->second);
+      ring = mRings.erase(ring);
     }
   }
 
-  // Then remove all which have been set to null.
-  mRings.erase(
-      std::remove_if(mRings.begin(), mRings.end(), [](auto const& p) { return !p; }), mRings.end());
-
   // Then add new rings.
-  for (auto const& ringSettings : mPluginSettings.mRings) {
-    auto existing = std::find_if(mRings.begin(), mRings.end(),
-        [&](auto val) { return val->getCenterName() == ringSettings.first; });
-    if (existing != mRings.end()) {
+  for (auto const& settings : mPluginSettings.mRings) {
+    if (mRings.find(settings.first) != mRings.end()) {
       continue;
     }
 
-    auto anchor = mAllSettings->mAnchors.find(ringSettings.first);
+    auto anchor = mAllSettings->mAnchors.find(settings.first);
 
     if (anchor == mAllSettings->mAnchors.end()) {
       throw std::runtime_error(
-          "There is no Anchor \"" + ringSettings.first + "\" defined in the settings.");
+          "There is no Anchor \"" + settings.first + "\" defined in the settings.");
     }
 
     auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
@@ -132,11 +130,11 @@ void Plugin::onLoad() {
     auto ring = std::make_shared<Ring>(mAllSettings, mSolarSystem, anchor->second.mCenter,
         anchor->second.mFrame, tStartExistence, tEndExistence);
 
-    ring->configure(ringSettings.second);
+    ring->configure(settings.second);
 
     mSolarSystem->registerAnchor(ring);
 
-    mRings.emplace_back(ring);
+    mRings.emplace(settings.first, ring);
   }
 }
 

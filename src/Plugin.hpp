@@ -44,8 +44,8 @@ class Plugin : public cs::core::PluginBase {
  private:
   void onLoad();
 
-  Settings                           mPluginSettings;
-  std::vector<std::shared_ptr<Ring>> mRings;
+  Settings                                     mPluginSettings;
+  std::map<std::string, std::shared_ptr<Ring>> mRings;
 
   int mOnLoadConnection = -1;
   int mOnSaveConnection = -1;
