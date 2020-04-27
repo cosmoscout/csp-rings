@@ -8,11 +8,14 @@
 #define CSP_RINGS_PLUGIN_HPP
 
 #include "../../../src/cs-core/PluginBase.hpp"
-#include "Ring.hpp"
 
-#include <VistaKernel/GraphicsManager/VistaOpenGLNode.h>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace csp::rings {
+
+class Ring;
 
 /// This plugin introduces planetary rings. They can be rendered around any object that is
 /// located at the center of a spice frame.
@@ -27,10 +30,10 @@ class Plugin : public cs::core::PluginBase {
       std::string mTexture;
 
       /// The distance from the planets center to where the rings start in meter.
-      double mInnerRadius;
+      float mInnerRadius{};
 
       /// The distance from the planets center to where the rings end in meter.
-      double mOuterRadius;
+      float mOuterRadius{};
     };
 
     std::map<std::string, Ring> mRings;
@@ -40,9 +43,13 @@ class Plugin : public cs::core::PluginBase {
   void deInit() override;
 
  private:
-  Settings                                      mPluginSettings;
-  std::vector<std::shared_ptr<Ring>>            mRings;
-  std::vector<std::unique_ptr<VistaOpenGLNode>> mRingNodes;
+  void onLoad();
+
+  Settings                                     mPluginSettings;
+  std::map<std::string, std::shared_ptr<Ring>> mRings;
+
+  int mOnLoadConnection = -1;
+  int mOnSaveConnection = -1;
 };
 
 } // namespace csp::rings

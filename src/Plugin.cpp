@@ -10,11 +10,8 @@
 #include "../../../src/cs-core/SolarSystem.hpp"
 #include "../../../src/cs-utils/logger.hpp"
 #include "../../../src/cs-utils/utils.hpp"
+#include "Ring.hpp"
 #include "logger.hpp"
-
-#include <VistaKernel/GraphicsManager/VistaSceneGraph.h>
-#include <VistaKernel/GraphicsManager/VistaTransformNode.h>
-#include <VistaKernelOpenSGExt/VistaOpenSGMaterialTools.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -34,17 +31,26 @@ namespace csp::rings {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings::Ring& o) {
-  o.mTexture     = cs::core::parseProperty<std::string>("texture", j);
-  o.mInnerRadius = cs::core::parseProperty<double>("innerRadius", j);
-  o.mOuterRadius = cs::core::parseProperty<double>("outerRadius", j);
+void from_json(nlohmann::json const& j, Plugin::Settings::Ring& o) {
+  cs::core::Settings::deserialize(j, "texture", o.mTexture);
+  cs::core::Settings::deserialize(j, "innerRadius", o.mInnerRadius);
+  cs::core::Settings::deserialize(j, "outerRadius", o.mOuterRadius);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings::Ring const& o) {
+  cs::core::Settings::serialize(j, "texture", o.mTexture);
+  cs::core::Settings::serialize(j, "innerRadius", o.mInnerRadius);
+  cs::core::Settings::serialize(j, "outerRadius", o.mOuterRadius);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void from_json(const nlohmann::json& j, Plugin::Settings& o) {
-  cs::core::parseSection("csp-rings",
-      [&] { o.mRings = cs::core::parseMap<std::string, Plugin::Settings::Ring>("rings", j); });
+void from_json(nlohmann::json const& j, Plugin::Settings& o) {
+  cs::core::Settings::deserialize(j, "rings", o.mRings);
+}
+
+void to_json(nlohmann::json& j, Plugin::Settings const& o) {
+  cs::core::Settings::serialize(j, "rings", o.mRings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,33 +59,12 @@ void Plugin::init() {
 
   logger().info("Loading plugin...");
 
-  mPluginSettings = mAllSettings->mPlugins.at("csp-rings");
+  mOnLoadConnection = mAllSettings->onLoad().connect([this]() { onLoad(); });
+  mOnSaveConnection = mAllSettings->onSave().connect(
+      [this]() { mAllSettings->mPlugins["csp-rings"] = mPluginSettings; });
 
-  for (auto const& settings : mPluginSettings.mRings) {
-    auto anchor = mAllSettings->mAnchors.find(settings.first);
-
-    if (anchor == mAllSettings->mAnchors.end()) {
-      throw std::runtime_error(
-          "There is no Anchor \"" + settings.first + "\" defined in the settings.");
-    }
-
-    auto   existence       = cs::core::getExistenceFromSettings(*anchor);
-    double tStartExistence = existence.first;
-    double tEndExistence   = existence.second;
-
-    auto ring = std::make_shared<Ring>(mGraphicsEngine, mSolarSystem, settings.second.mTexture,
-        anchor->second.mCenter, anchor->second.mFrame, settings.second.mInnerRadius,
-        settings.second.mOuterRadius, tStartExistence, tEndExistence);
-    mSolarSystem->registerAnchor(ring);
-
-    ring->setSun(mSolarSystem->getSun());
-
-    mRingNodes.emplace_back(mSceneGraph->NewOpenGLNode(mSceneGraph->GetRoot(), ring.get()));
-    VistaOpenSGMaterialTools::SetSortKeyOnSubtree(
-        mRingNodes.back().get(), static_cast<int>(cs::utils::DrawOrder::eAtmospheres) + 1);
-
-    mRings.push_back(ring);
-  }
+  // Load settings.
+  onLoad();
 
   logger().info("Loading done.");
 }
@@ -90,14 +75,67 @@ void Plugin::deInit() {
   logger().info("Unloading plugin...");
 
   for (auto const& ring : mRings) {
-    mSolarSystem->unregisterAnchor(ring);
+    mSolarSystem->unregisterAnchor(ring.second);
   }
 
-  for (auto const& ringNode : mRingNodes) {
-    mSceneGraph->GetRoot()->DisconnectChild(ringNode.get());
-  }
+  mAllSettings->onLoad().disconnect(mOnLoadConnection);
+  mAllSettings->onSave().disconnect(mOnSaveConnection);
 
   logger().info("Unloading done.");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Plugin::onLoad() {
+  // Read settings from JSON.
+  from_json(mAllSettings->mPlugins.at("csp-rings"), mPluginSettings);
+
+  // First try to re-configure existing rings. We assume that they are similar if they have the same
+  // name in the settings (which means they are attached to an anchor with the same name).
+  auto ring = mRings.begin();
+  while (ring != mRings.end()) {
+    auto settings = mPluginSettings.mRings.find(ring->first);
+    if (settings != mPluginSettings.mRings.end()) {
+      // If there are settings for this ring, reconfigure it.
+      auto anchor                           = mAllSettings->mAnchors.find(settings->first);
+      auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
+      ring->second->setStartExistence(tStartExistence);
+      ring->second->setEndExistence(tEndExistence);
+      ring->second->setFrameName(anchor->second.mFrame);
+      ring->second->configure(settings->second);
+
+      ++ring;
+    } else {
+      // Else delete it.
+      mSolarSystem->unregisterAnchor(ring->second);
+      ring = mRings.erase(ring);
+    }
+  }
+
+  // Then add new rings.
+  for (auto const& settings : mPluginSettings.mRings) {
+    if (mRings.find(settings.first) != mRings.end()) {
+      continue;
+    }
+
+    auto anchor = mAllSettings->mAnchors.find(settings.first);
+
+    if (anchor == mAllSettings->mAnchors.end()) {
+      throw std::runtime_error(
+          "There is no Anchor \"" + settings.first + "\" defined in the settings.");
+    }
+
+    auto [tStartExistence, tEndExistence] = anchor->second.getExistence();
+
+    auto ring = std::make_shared<Ring>(mAllSettings, mSolarSystem, anchor->second.mCenter,
+        anchor->second.mFrame, tStartExistence, tEndExistence);
+
+    ring->configure(settings.second);
+
+    mSolarSystem->registerAnchor(ring);
+
+    mRings.emplace(settings.first, ring);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
